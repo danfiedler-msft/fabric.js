@@ -1,18 +1,28 @@
 {
   "name": "fabric-webworker",
   "description": "fabric.js package with OffScreenCanvas support to run in webworker",
-  "homepage": "https://github.com/kamayani-ms/fabric.js",
-  "version": "1.0.0",
-  "author": "Kamayani Ranjan",
+  "homepage": "https://github.com/flipgrid/fabric.js",
+  "version": "5.3.0-webworker",
+  "author": "Juriy Zaytsev <kangax@gmail.com>",
+  "contributors": [
+    {
+      "name": "Andrea Bogazzi",
+      "email": "andreabogazzi79@gmail.com"
+    },
+    {
+      "name": "Steve Eberhardt",
+      "email": "melchiar2@gmail.com"
+    }
+  ],
   "keywords": [
     "fabric.js"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/kamayani-ms/fabric.js"
+    "url": "https://github.com/flipgrid/fabric.js"
   },
   "bugs": {
-    "url": "https://github.com/kamayani-ms/fabric.js/issues"
+    "url": "https://github.com/flipgrid/fabric.js/issues"
   },
   "license": "MIT",
   "scripts": {
