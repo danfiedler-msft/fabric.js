@@ -2,7 +2,7 @@
   "name": "fabric-webworker",
   "description": "fabric.js package with OffScreenCanvas support to run in webworker",
   "homepage": "https://github.com/flipgrid/fabric.js",
-  "version": "5.3.0-webworker",
+  "version": "5.3.0-webworker.1",
   "author": "Juriy Zaytsev <kangax@gmail.com>",
   "contributors": [
     {
@@ -17,6 +17,17 @@
   "keywords": [
     "fabric.js"
   ],
+  "browser": {
+    "canvas": false,
+    "fs": false,
+    "jsdom": false,
+    "jsdom/lib/jsdom/living/generated/utils": false,
+    "jsdom/lib/jsdom/utils": false,
+    "http": false,
+    "https": false,
+    "xmldom": false,
+    "url": false
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/flipgrid/fabric.js"
