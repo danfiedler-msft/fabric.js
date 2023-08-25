@@ -39,7 +39,7 @@ else {
   fabric.jsdomImplForWrapper = require('jsdom/lib/jsdom/living/generated/utils').implForWrapper;
   fabric.nodeCanvas = require('jsdom/lib/jsdom/utils').Canvas;
   fabric.window = virtualWindow;
-  DOMParser = fabric.window?.DOMParser;
+  DOMParser = fabric.window && fabric.window.DOMParser;
 }
 
 /**
@@ -47,7 +47,7 @@ else {
  * @type boolean
  */
 fabric.isTouchSupported = !!fabric.window && ('ontouchstart' in fabric.window || 'ontouchstart' in fabric.document ||
-  (fabric.window && fabric.window?.navigator && fabric.window?.navigator.maxTouchPoints > 0));
+  (fabric.window && fabric.window.navigator && fabric.window.navigator.maxTouchPoints > 0));
 
 /**
  * True when in environment that's probably Node.js
@@ -147,9 +147,9 @@ fabric.enableGLFiltering = true;
  * Device Pixel Ratio
  * @see https://developer.apple.com/library/safari/documentation/AudioVideo/Conceptual/HTML-canvas-guide/SettingUptheCanvas/SettingUptheCanvas.html
  */
-fabric.devicePixelRatio = fabric.window?.devicePixelRatio ||
-                          fabric.window?.webkitDevicePixelRatio ||
-                          fabric.window?.mozDevicePixelRatio ||
+fabric.devicePixelRatio = (fabric.window &&
+                            (fabric.window.devicePixelRatio || fabric.window.webkitDevicePixelRatio || fabric.window.mozDevicePixelRatio)
+                          ) ||
                           1;
 /**
  * Browser-specific constant to adjust CanvasRenderingContext2D.shadowBlur value,
@@ -1159,22 +1159,24 @@ fabric.CommonMethods = {
      * @return {Object} DOM element (div containing the SVG image)
      */
     loadImageInDom: function(img, onLoadCallback) {
-      var div = fabric.document?.createElement('div');
-      div.style.width = div.style.height = '1px';
-      div.style.left = div.style.top = '-100%';
-      div.style.position = 'absolute';
-      div.appendChild(img);
-      fabric.document?.querySelector('body').appendChild(div);
-      /**
-       * Wrap in function to:
-       *   1. Call existing callback
-       *   2. Cleanup DOM
-       */
-      img.onload = function () {
-        onLoadCallback();
-        div.parentNode.removeChild(div);
-        div = null;
-      };
+      if (fabric.document) {
+        var div = fabric.document.createElement('div');
+        div.style.width = div.style.height = '1px';
+        div.style.left = div.style.top = '-100%';
+        div.style.position = 'absolute';
+        div.appendChild(img);
+        fabric.document.querySelector('body').appendChild(div);
+        /**
+         * Wrap in function to:
+         *   1. Call existing callback
+         *   2. Cleanup DOM
+         */
+        img.onload = function () {
+          onLoadCallback();
+          div.parentNode.removeChild(div);
+          div = null;
+        };
+      }
     },
 
     /**
@@ -1343,7 +1345,7 @@ fabric.CommonMethods = {
      * @return {CanvasElement} initialized canvas element
      */
     createCanvasElement: function() {
-      return fabric.document?.createElement('canvas')  ?? new OffscreenCanvas(1280, 720);
+      return (fabric.document && fabric.document.createElement('canvas')) || new OffscreenCanvas(1280, 720);
     },
 
     /**
@@ -1381,7 +1383,7 @@ fabric.CommonMethods = {
      * @return {HTMLImageElement} HTML image element
      */
     createImage: function() {
-      return fabric.document?.createElement('img');
+      return fabric.document && fabric.document.createElement('img');
     },
 
     /**
@@ -3208,8 +3210,8 @@ fabric.CommonMethods = {
 
 (function () {
   // since ie11 can use addEventListener but they do not support options, i need to check
-  var couldUseAttachEvent = !!fabric.document?.createElement('div').attachEvent,
-      touchEvents = ['touchstart', 'touchmove', 'touchend'];
+  var couldUseAttachEvent = !!(fabric.document && fabric.document.createElement('div').attachEvent,
+      touchEvents = ['touchstart', 'touchmove', 'touchend']);
   /**
    * Adds an event listener to an element
    * @function
@@ -3292,9 +3294,9 @@ fabric.CommonMethods = {
     return element;
   }
 
-  var parseEl = fabric.document?.createElement('div'),
-      supportsOpacity = typeof parseEl?.style.opacity === 'string',
-      supportsFilters = typeof parseEl?.style.filter === 'string',
+  var parseEl = fabric.document && fabric.document.createElement('div'),
+      supportsOpacity = typeof (parseEl && parseEl.style.opacity) === 'string',
+      supportsFilters = typeof (parseEl && parseEl.style.filter) === 'string',
       reOpacity = /alpha\s*\(\s*opacity\s*=\s*([^\)]+)\)/,
 
       /** @ignore */
@@ -3341,7 +3343,7 @@ fabric.CommonMethods = {
    * @return {HTMLElement|null}
    */
   function getById(id) {
-    return typeof id === 'string' ? fabric.document?.getElementById(id) : id;
+    return typeof id === 'string' ? fabric.document && fabric.document.getElementById(id) : id;
   }
 
   var sliceCanConvertNodelists,
@@ -3356,7 +3358,7 @@ fabric.CommonMethods = {
       };
 
   try {
-    sliceCanConvertNodelists = toArray(fabric.document?.childNodes) instanceof Array;
+    sliceCanConvertNodelists = toArray(fabric.document && fabric.document.childNodes) instanceof Array;
   }
   catch (err) { }
 
@@ -3378,7 +3380,7 @@ fabric.CommonMethods = {
    * @return {HTMLElement} Newly created element
    */
   function makeElement(tagName, attributes) {
-    var el = fabric.document?.createElement(tagName);
+    var el = fabric.document && fabric.document.createElement(tagName);
     for (var prop in attributes) {
       if (prop === 'class') {
         el.className = attributes[prop];
@@ -3434,8 +3436,8 @@ fabric.CommonMethods = {
 
     var left = 0,
         top = 0,
-        docElement = fabric.document?.documentElement,
-        body = fabric.document?.body || {
+        docElement = fabric.document && fabric.document.documentElement,
+        body = (fabric.document && fabric.document.body) || {
           scrollLeft: 0, scrollTop: 0
         };
 
@@ -3514,9 +3516,9 @@ fabric.CommonMethods = {
    * @return {String} Style attribute value of the given element.
    */
   var getElementStyle;
-  if (fabric.document?.defaultView && fabric.document?.defaultView.getComputedStyle) {
+  if (fabric.document && fabric.document.defaultView && fabric.document.defaultView.getComputedStyle) {
     getElementStyle = function(element, attr) {
-      var style = fabric.document?.defaultView.getComputedStyle(element, null);
+      var style = fabric.document.defaultView.getComputedStyle(element, null);
       return style ? style[attr] : undefined;
     };
   }
@@ -3531,7 +3533,7 @@ fabric.CommonMethods = {
   }
 
   (function () {
-    var style = fabric.document?.documentElement.style,
+    var style = (fabric.document && fabric.document.documentElement.style),
         selectProp = style && 'userSelect' in style
           ? 'userSelect'
           : style && 'MozUserSelect' in style
@@ -3924,16 +3926,18 @@ fabric.warn = console.warn;
     return context.cancel;
   }
 
-  var _requestAnimFrame = fabric.window?.requestAnimationFrame       ||
-                          fabric.window?.webkitRequestAnimationFrame ||
-                          fabric.window?.mozRequestAnimationFrame    ||
-                          fabric.window?.oRequestAnimationFrame      ||
-                          fabric.window?.msRequestAnimationFrame     ||
+  var _requestAnimFrame = (fabric.window && (
+                            fabric.window.requestAnimationFrame       ||
+                            fabric.window.webkitRequestAnimationFrame ||
+                            fabric.window.mozRequestAnimationFrame    ||
+                            fabric.window.oRequestAnimationFrame      ||
+                            fabric.window.msRequestAnimationFrame
+                          )) ||
                           function(callback) {
-                            return fabric.window?.setTimeout(callback, 1000 / 60);
+                            return fabric.window && fabric.window.setTimeout(callback, 1000 / 60);
                           };
 
-  var _cancelAnimFrame = fabric.window?.cancelAnimationFrame || fabric.window?.clearTimeout;
+  var _cancelAnimFrame = fabric.window && (fabric.window.cancelAnimationFrame || fabric.window.clearTimeout);
 
   /**
    * requestAnimationFrame polyfill based on http://paulirish.com/2011/requestanimationframe-for-smart-animating/
@@ -26960,10 +26964,12 @@ fabric.Image.filters.BaseFilter.fromObject = function(object, callback) {
           path = this.path,
           shortCut = !isJustify && this.charSpacing === 0 && this.isEmptyStyles(lineIndex) && !path,
           isLtr = this.direction === 'ltr', sign = this.direction === 'ltr' ? 1 : -1,
-          drawingLeft, currentDirection = ctx.canvas.getAttribute?.('dir');
+          drawingLeft, currentDirection = ctx.canvas.getAttribute && ctx.canvas.getAttribute('dir');
       ctx.save();
       if (currentDirection !== this.direction) {
-        ctx.canvas.setAttribute?.('dir', isLtr ? 'ltr' : 'rtl');
+        if (ctx.canvas.setAttribute) {
+          ctx.canvas.setAttribute('dir', isLtr ? 'ltr' : 'rtl');
+        }
         ctx.direction = isLtr ? 'ltr' : 'rtl';
         ctx.textAlign = isLtr ? 'left' : 'right';
       }
@@ -29694,7 +29700,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * Initializes hidden textarea (needed to bring up keyboard in iOS)
    */
   initHiddenTextarea: function() {
-    this.hiddenTextarea = fabric.document?.createElement('textarea');
+    this.hiddenTextarea = fabric.document && fabric.document.createElement('textarea');
     this.hiddenTextarea.setAttribute('autocapitalize', 'off');
     this.hiddenTextarea.setAttribute('autocorrect', 'off');
     this.hiddenTextarea.setAttribute('autocomplete', 'off');
@@ -29712,7 +29718,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
       this.hiddenTextareaContainer.appendChild(this.hiddenTextarea);
     }
     else {
-      fabric.document?.body.appendChild(this.hiddenTextarea);
+      fabric.document && fabric.document.body.appendChild(this.hiddenTextarea);
     }
 
     fabric.util.addListener(this.hiddenTextarea, 'keydown', this.onKeyDown.bind(this));
@@ -29991,7 +29997,7 @@ fabric.util.object.extend(fabric.IText.prototype, /** @lends fabric.IText.protot
    * @return {Object} Clipboard data object
    */
   _getClipboardData: function(e) {
-    return (e && e.clipboardData) || fabric.window?.clipboardData;
+    return (e && e.clipboardData) || (fabric.window && fabric.window.clipboardData);
   },
 
   /**
