@@ -3210,8 +3210,8 @@ fabric.CommonMethods = {
 
 (function () {
   // since ie11 can use addEventListener but they do not support options, i need to check
-  var couldUseAttachEvent = !!(fabric.document && fabric.document.createElement('div').attachEvent,
-      touchEvents = ['touchstart', 'touchmove', 'touchend']);
+  var couldUseAttachEvent = !!(fabric.document && fabric.document.createElement('div').attachEvent),
+      touchEvents = ['touchstart', 'touchmove', 'touchend'];
   /**
    * Adds an event listener to an element
    * @function
